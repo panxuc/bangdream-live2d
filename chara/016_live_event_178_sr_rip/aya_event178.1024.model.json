@@ -1,0 +1,9 @@
+{
+	"type": "Live2D Model Setting",
+	"name": "aya_event178",
+	"model": "aya_event178.moc",
+	"textures": [
+		"aya_event178.1024/texture_00.png",
+		"aya_event178.1024/texture_01.png"
+	]
+}

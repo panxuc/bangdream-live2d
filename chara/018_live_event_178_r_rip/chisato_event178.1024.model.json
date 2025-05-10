@@ -1,0 +1,9 @@
+{
+	"type": "Live2D Model Setting",
+	"name": "chisato_event178",
+	"model": "chisato_event178.moc",
+	"textures": [
+		"chisato_event178.1024/texture_00.png",
+		"chisato_event178.1024/texture_01.png"
+	]
+}
