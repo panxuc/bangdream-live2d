@@ -8,6 +8,6 @@ This repository has no affiliation with [*BanG Dream! Project*](https://bang-dre
 
 ## Features
 
-This repository will try to update itself every Sunday.
+This repository will try to update itself every Sunday and Wednesday.
 
 All files are from [Bestdori](https://bestdori.com/), please consider [supporting them](https://bestdori.com/home/support).
