@@ -6,10 +6,16 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 
+def is_bili_chara(chara_id):
+    return chara_id.startswith('bili_') or chara_id.endswith('_2018_halloween') or '_2019af' in chara_id
+
+
 class BestdoriDownloader:
     def __init__(self):
         self.base_url = "https://bestdori.com/assets/jp/live2d/chara/"
         self.info_url = "https://bestdori.com/api/explorer/jp/assets/live2d/chara/"
+        self.base_url_cn = "https://bestdori.com/assets/cn/live2d/chara/"
+        self.info_url_cn = "https://bestdori.com/api/explorer/cn/assets/live2d/chara/"
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -19,15 +25,18 @@ class BestdoriDownloader:
         try:
             chara_dir = Path(save_dir) / f"{chara_id}_rip"
             chara_dir.mkdir(parents=True, exist_ok=True)
-            index_url = urljoin(self.info_url, f"{chara_id}.json")
+            index_url = urljoin(self.info_url, f"{chara_id}.json") if not is_bili_chara(
+                chara_id) else urljoin(self.info_url_cn, f"{chara_id}.json")
             response = self.session.get(index_url)
             response.raise_for_status()
             index_data = response.json()
-            existing_files = {file.name for file in chara_dir.glob("**/*") if file.is_file()}
-            index_data = [file for file in index_data if file not in existing_files]
+            existing_files = {file.name for file in chara_dir.glob(
+                "**/*") if file.is_file()}
+            index_data = [
+                file for file in index_data if file not in existing_files]
             for file_path in index_data:
-                file_url = urljoin(
-                    self.base_url, f"{chara_id}_rip/{file_path}")
+                file_url = urljoin(self.base_url, f"{chara_id}_rip/{file_path}") if not is_bili_chara(
+                    chara_id) else urljoin(self.base_url_cn, f"{chara_id}_rip/{file_path}")
                 save_path = chara_dir / file_path
                 save_path.parent.mkdir(parents=True, exist_ok=True)
                 file_response = self.session.get(file_url)
@@ -44,16 +53,27 @@ class BestdoriDownloader:
 
 def main():
     url = "https://bestdori.com/api/explorer/jp/assets/_info.json"
+    url_cn = "https://bestdori.com/api/explorer/cn/assets/_info.json"
 
     try:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
+        chara_data = {}
         if 'live2d' in data and 'chara' in data['live2d']:
             chara_data = data['live2d']['chara']
-            with open('_info.json', 'w', encoding='utf-8') as f:
-                json.dump(chara_data, f, ensure_ascii=False,
-                          separators=(',', ':'))
+
+        response_cn = requests.get(url_cn)
+        response_cn.raise_for_status()
+        data_cn = response_cn.json()
+        if 'live2d' in data_cn and 'chara' in data_cn['live2d']:
+            chara_data_cn = data_cn['live2d']['chara']
+            for key, value in chara_data_cn.items():
+                if key not in chara_data:
+                    chara_data[key] = value
+
+        with open('_info.json', 'w', encoding='utf-8') as f:
+            json.dump(chara_data, f, ensure_ascii=False, separators=(',', ':'))
             print("Updated latest `_info.json`")
             chara_dir = Path("chara")
             if not chara_dir.exists():
@@ -84,8 +104,6 @@ def main():
                     time.sleep(1)
             else:
                 print("Already up to date.")
-        else:
-            print("No live2d data found in the response.")
 
     except requests.exceptions.RequestException as e:
         print(f"Failed to request: {e}")
