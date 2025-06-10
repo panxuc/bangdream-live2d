@@ -30,8 +30,8 @@ class BestdoriDownloader:
             response = self.session.get(index_url)
             response.raise_for_status()
             index_data = response.json()
-            existing_files = {file.name for file in chara_dir.glob(
-                "**/*") if file.is_file()}
+            existing_files = {file.name for file in chara_dir.glob("**/*") if file.is_file(
+            ) and not file.name.endswith('.asset') and not file.name.endswith('.bundle')}
             index_data = [
                 file for file in index_data if file not in existing_files]
             for file_path in index_data:
@@ -44,7 +44,7 @@ class BestdoriDownloader:
                 with open(save_path, 'wb') as f:
                     f.write(file_response.content)
                 print(f"Downloaded: {file_path}")
-                time.sleep(1)
+                # time.sleep(1)
             return True
         except Exception as e:
             print(f"Failed to download {chara_id} : {e}")
@@ -87,6 +87,12 @@ def main():
             for chara_id, chara_info in chara_data.items():
                 if chara_id + "_rip" not in local_files.keys() or local_files[chara_id + "_rip"] < chara_info:
                     missing_files.append(chara_id)
+                    prefix = chara_id.split('_')[0]
+                    for folder_name in local_files.keys():
+                        if folder_name.startswith(prefix + '_'):
+                            base_id = folder_name.replace('_rip', '')
+                            if base_id not in missing_files:
+                                missing_files.append(base_id)
             if missing_files:
                 print(f"Found {len(missing_files)} missing files:")
                 for chara_id in missing_files:
@@ -101,7 +107,7 @@ def main():
                         print(f"[*] Success: {chara_id}")
                     else:
                         print(f"[*] Failed: {chara_id}")
-                    time.sleep(1)
+                    # time.sleep(1)
             else:
                 print("Already up to date.")
 
